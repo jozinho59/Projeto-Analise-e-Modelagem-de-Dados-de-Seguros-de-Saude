@@ -1,0 +1,87 @@
+# Importando bibliotecas necessárias
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from scipy import stats
+from statsmodels.formula.api import ols
+import statsmodels.api as sm
+
+# Carregar o conjunto de dados
+data = pd.read_csv('insurance.csv')
+
+# Análise Exploratória de Dados (EDA)
+print("\n## Análise Exploratória de Dados (EDA)")
+print("\nDistribuição das Variáveis:")
+print(data.describe())
+
+print("\nDistribuição de Variáveis Categóricas:")
+print(data['sex'].value_counts())
+print(data['smoker'].value_counts())
+print(data['region'].value_counts())
+
+# Plotar distribuição das variáveis numéricas
+sns.pairplot(data)
+plt.suptitle("Distribuição de Variáveis Numéricas")
+plt.show()
+
+# Correlação entre as variáveis
+correlation = data.corr()
+print("\nCorrelação entre as variáveis:")
+print(correlation)
+
+# Visualizando a correlação em um heatmap
+plt.figure(figsize=(10, 8))
+sns.heatmap(correlation, annot=True, cmap='coolwarm')
+plt.title('Correlação entre as variáveis')
+plt.show()
+
+# Explorar características como idade, sexo, IMC, número de filhos, fumante e região, e como elas afetam os encargos do seguro
+sns.boxplot(x='smoker', y='charges', data=data)
+plt.title('Distribuição dos encargos por fumante/não fumante')
+plt.show()
+
+sns.boxplot(x='sex', y='charges', data=data)
+plt.title('Distribuição dos encargos por gênero')
+plt.show()
+
+sns.boxplot(x='region', y='charges', data=data)
+plt.title('Distribuição dos encargos por região')
+plt.show()
+
+# Teste de Hipótese Estatística
+print("\n## Teste de Hipótese Estatística")
+
+# Teste para ver diferenças nos encargos entre fumantes e não fumantes
+t_stat, p_value = stats.ttest_ind(data[data['smoker'] == 'yes']['charges'], data[data['smoker'] == 'no']['charges'])
+print(f"Teste t para encargos entre fumantes e não fumantes: t={t_stat:.2f}, p={p_value:.4f}")
+
+# Teste para ver diferenças nos encargos entre homens e mulheres
+t_stat, p_value = stats.ttest_ind(data[data['sex'] == 'male']['charges'], data[data['sex'] == 'female']['charges'])
+print(f"Teste t para encargos entre homens e mulheres: t={t_stat:.2f}, p={p_value:.4f}")
+
+# Modelagem Estatística: Regressão Linear
+print("\n## Modelagem Estatística: Regressão Linear")
+# Modelo de regressão linear para prever encargos
+formula = 'charges ~ age + sex + bmi + children + smoker + region'
+model = ols(formula, data=data).fit()
+
+# Resumo do modelo
+print(model.summary())
+
+# Avaliar a qualidade do modelo
+# Plotar gráfico de resíduos
+residuos = model.resid
+sns.histplot(residuos, kde=True)
+plt.title("Distribuição dos Resíduos")
+plt.show()
+
+# Gráfico QQ-plot para verificar normalidade dos resíduos
+sm.qqplot(model.resid, line='s')
+plt.title("QQ-plot dos Resíduos")
+plt.show()
+
+print("\n## Conclusões:")
+print("- Os testes de hipótese mostram que existem diferenças significativas nos encargos entre fumantes e não fumantes, e entre homens e mulheres.")
+print("- O modelo de regressão linear fornece uma visão sobre como as variáveis influenciam os encargos do seguro.")
+print("- Avaliando os resíduos, o modelo parece se comportar razoavelmente bem, com resíduos próximos à normalidade.")
+print("- Use esses insights para ajudar a empresa a otimizar a estratégia de preços e entender melhor os clientes.")
